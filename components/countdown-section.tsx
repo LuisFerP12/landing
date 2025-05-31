@@ -12,20 +12,45 @@ const images = [
   "/assets/images/172.jpg",
 ]
 
-const IMAGE_CHANGE_INTERVAL = 1500 // Change image every 1.5 seconds
+const IMAGE_CHANGE_INTERVAL = 3000 // Increased to 3 seconds for better UX
 
 export default function CountdownSection() {
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
+  const [imagesLoaded, setImagesLoaded] = useState(false)
+  const [loadedImages, setLoadedImages] = useState<Set<number>>(new Set())
   const sectionRef = useRef<HTMLDivElement>(null)
 
-  // Image slideshow effect
+  // Preload all images
   useEffect(() => {
+    const preloadImages = () => {
+      const imagePromises = images.map((src, index) => {
+        return new Promise<number>((resolve) => {
+          const img = new Image()
+          img.onload = () => resolve(index)
+          img.onerror = () => resolve(index) // Still resolve to avoid hanging
+          img.src = src
+        })
+      })
+
+      Promise.all(imagePromises).then((loadedIndexes) => {
+        setLoadedImages(new Set(loadedIndexes))
+        setImagesLoaded(true)
+      })
+    }
+
+    preloadImages()
+  }, [])
+
+  // Image slideshow effect - only start after images are loaded
+  useEffect(() => {
+    if (!imagesLoaded) return
+
     const imageInterval = setInterval(() => {
       setCurrentImageIndex((prevIndex) => (prevIndex + 1) % images.length)
     }, IMAGE_CHANGE_INTERVAL)
 
     return () => clearInterval(imageInterval)
-  }, [])
+  }, [imagesLoaded])
 
   // Countdown timer
   const [countdown, setCountdown] = useState({
@@ -63,13 +88,25 @@ export default function CountdownSection() {
 
   return (
     <div ref={sectionRef} className="relative min-h-screen overflow-hidden bg-black">
-      {/* Background Image Slideshow */}
+      {/* Background Image Slideshow with improved loading */}
       <div
-        className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-all duration-1000 grayscale contrast-110 brightness-105"
+        className={`absolute inset-0 bg-cover bg-center bg-no-repeat transition-all duration-500 grayscale contrast-110 brightness-105 ${
+          !imagesLoaded ? 'opacity-0' : 'opacity-100'
+        }`}
         style={{
           backgroundImage: `url(${images[currentImageIndex]})`,
         }}
       />
+
+      {/* Loading state overlay */}
+      {!imagesLoaded && (
+        <div className="absolute inset-0 bg-black flex items-center justify-center">
+          <div className="text-amber-50 text-center">
+            <div className="w-8 h-8 border-2 border-amber-50 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <p className="text-sm uppercase tracking-wider">Cargando...</p>
+          </div>
+        </div>
+      )}
 
       {/* Overlay */}
       <div className="absolute inset-0 bg-black/25 flex flex-col justify-between items-center p-6 lg:p-12 text-amber-50">
