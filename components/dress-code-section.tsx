@@ -5,7 +5,7 @@ import { Sparkles, Users, Heart } from "lucide-react"
 
 export default function DressCodeSection() {
   return (
-    <section className="py-16 sm:py-20 lg:py-24 bg-gradient-to-br from-slate-50 to-stone-100 relative overflow-hidden">
+    <section id="dress-code" className="py-16 sm:py-20 lg:py-24 bg-gradient-to-br from-slate-50 to-stone-100 relative overflow-hidden">
       {/* Floating decorative elements - different pattern */}
       <div className="absolute inset-0 opacity-8">
         {/* Floating circles instead of stars */}
